@@ -1,14 +1,16 @@
 const MongoClient = require( 'mongodb' ).MongoClient;
 const url = "mongodb://localhost:27017";
 
-var _db;
+let _db;
 
 module.exports = {
 
   connectToServer: function( callback ) {
+    if(_db) return callback(_db);
     MongoClient.connect( url,  function( err, client ) {
-      db = client.db('caixinhaSOE');
-      // return callback( err );
+      if (err) throw err;
+      _db = client.db('caixinhaSOE');
+      callback( _db );
     } );
   },
 

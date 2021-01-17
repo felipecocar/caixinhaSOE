@@ -1,23 +1,38 @@
-var MongoClient = require('mongodb').MongoClient;
-var url = 'mongodb://localhost/caixinhaSOE'
+const dbUtil = require('../mongoUtil');
 
-function execute(user, msg){
+function execute(user, msg) {
+	const db = dbUtil.getDb();
+	if(!db) throw new Error('Db not connected yet?');
 
-	MongoClient.connect(url, function(err,client) {
-	  if (err) throw err;
-	  var db = client.db('caixinhaSOE');
-	  var users = db.collection('user');
-	  var cursor = users.find();
+	var users = db.collection('user');
+	// var cursor = users.find();
 
-	  var query = { number: user };
-		var newvalues = { $set: {number: user, stage: 2 } };
+	var query = { number: user };
+	var datetimeNow = new Date();
 
-		users.updateOne(query, newvalues, function(err,res){
-			if (err) throw err;
-			console.log('updated to stage 2');
-		});
+	// Atualiza STAGE
+	var stageValues = {
+		$set: { stage: 2 }
+	};
+	users.updateOne(query, stageValues, function(err,res){
+		if (err) throw err;
+		console.log('updated to stage 2');
 	});
-	//salvar no banco o depoimento
+
+	// Atualiza depoiments
+	var depoimentosValues = {
+		$push: {
+			depoimentos: {
+				datetime: datetimeNow,
+				msgSent: msg,
+				nota: 2
+			}
+		}
+	}
+	users.updateOne(query, depoimentosValues, function(err,res){
+		if (err) throw err;
+		console.log('updated to stage 2');
+	});
 
 	return "Ok. anotamos tudinho. Vamos passar para os responsáveis.";
 }

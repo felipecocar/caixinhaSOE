@@ -1,10 +1,9 @@
 var MongoClient = require('mongodb').MongoClient;
 var url = 'mongodb://localhost/caixinhaSOE'
+var dbUtil = require('./mongoUtil');
 
-
-MongoClient.connect(url, function(err,client) {
-  if (err) throw err;
-  var db = client.db('caixinhaSOE');
+// MongoClient.connect(url, function(err, client) {
+dbUtil.connectToServer(function(db){
   var users = db.collection('user');
   var cursor = users.find();
 
@@ -24,15 +23,15 @@ MongoClient.connect(url, function(err,client) {
 
     //ENVIO PERIODICO DE MENSAGENS
     setInterval(function() {
-      cursor.forEach(function(result){
-        console.log(result.number);
-        console.log(result.stage);
+      cursor.forEach(function(result) {
+        const { number, stage } = result;
+        console.log({ number, stage });
 
         //STAGE 2 = ESTÁGIO DE RECEBIMENTO CONTÍNUO
-        if(result.stage == 2){
+        if(stage == 2) {
           client.sendText(
-            result.number, 
-            stages.step[result.stage].obj.execute(result.number, "") //EXECUTA O ESTÁGIO 2
+            number, 
+            stages.step[stage].obj.execute(number, "") //EXECUTA O ESTÁGIO 2
           );
         }
 
@@ -40,7 +39,7 @@ MongoClient.connect(url, function(err,client) {
         // callback(error, results);
       });
 
-    }, 10000); //PERIODICIDADE = 10 SEGUNDOS
+    }, 60000); //PERIODICIDADE = 10 SEGUNDOS
 
     //ENVIO DE MENSAGEM PELO USUÁRIO
     client.onMessage((message) => {
